@@ -39,3 +39,56 @@ My goal is to support simulating a massive world, with hundreds of thousands of 
 simulating macro events like interactions between populations, and a full economy with
 actors trading and producing goods, instead of shops and resources simply being "spawned
 in" for the player to utilize.
+
+*********
+
+To start out, actor behavior will be simple: performing a set of tasks each day,
+traveling along a route to specific locations for each task. To simplify path finding,
+actors will simply follow existing paths whenever possible. In a rural setting, this
+could simply be compacted soil clear of foliage. There might be a mechanic for compacted
+dirt paths being created as actors travel over them, or they might be intentionally
+created in the world by actors. In a city setting, paths will be mostly static, as paved
+road ways surrounding buildings.
+
+For "routine" behaviors like daily chores, only need to be simulated once, and the
+outcome can be cached, so non-rendered simulation simply applies the cached outcome.
+These "routine" behaviors are "deterministic events", which can be simulated quickly.
+However, to handle random, non-deterministic events, either from random actor behaviors,
+needing to be rendered, or from a player interaction, the routes of actors must be
+tracked and queryable, to flag the actor to be simulated in real time or in finer
+detail, instead of using the cached behavior outcome.
+
+This would also apply to random scenarios like apply illness or injury; before an actor
+"starts" their day, an "RNG check" would be made if some deviation to their "routine"
+will occur, which will also flag the actor for fine-detail simulation, to account for
+the "RNG" even. In addition, the RNG should be "deterministic", in the sense that it's
+all based off a seed that evolves each day, so doing two simulations from the same saved
+initial state will result the same final output state.
+
+In summary, an actor in a rural setting will usually follow a daily routine set of
+behaviors, the output of which can be cached and quickly simulated each day. However,
+a number of things might interrupt this process, like: 1) being rendered or interacting
+with the player 2) interacting with another actor's random event 3) a random scenario
+affecting the actor like illness. In case 2, it might even be part of the other actor's
+"routine", for example a traveling merchant doing trading.
+
+One thing that this approach doesn't handle is a chaotic setting like a city. Such a
+large density of actors, with overlapping routes and "routines", it makes sense to
+handle crowded areas with special logic. For many actors traveling on roads and paths,
+maybe we could compute a rough crowd density over time, and apply a slow down in travel
+speed as it gets higher; that way, if the crowd needs to be rendered when the player is
+nearby, the slower speed could be visualized by people slowing down to avoid bumping
+into each other. Or maybe that doesn't make sense. Correctly handling a chaotic setting
+might work if we build a real time simulation first, and try to work out how to improve
+efficiency by caching routines and behaviors second.
+
+I envisioned cities as being quite chaotic; random events like crime interrupting the
+normal flow. I had an idea for implementing some sort of "noise" mechanic that operates
+over a certain distance. If an actor yelled out or an explosion occurred, that might
+attract other actors within a certain radius, maybe causing them to investigate. The
+problem I envision with such a system is the overall world simulation performing quickly,
+but then the latency randomly spiking when some random event occurs in the city, changing
+the behaviors of many actors at once. In normal game play, this might not be that huge of
+an issue, since the simulation only needs to run at "real time" with the player, and this
+slow down would only be an issue when trying to simulating in "fast forward" mode, which
+might be acceptable.
